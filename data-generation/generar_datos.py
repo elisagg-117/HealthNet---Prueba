@@ -324,7 +324,7 @@ def guardar_archivos(tabla, registros, carpeta):
     if primero is None:
         raise ValueError(f"No hay registros para {tabla}.")
 
-    campos = list(registros[0].keys())
+    campos = list(primero.keys())
 
     with open(
         carpeta / f"{tabla}.csv",
@@ -341,10 +341,10 @@ def guardar_archivos(tabla, registros, carpeta):
 
             escritor = csv.DictWriter(archivo_csv, fieldnames=campos)
             escritor.writeheader()
-            escritor.writerows(primero)
+            escritor.writerow(primero)
 
             archivo_json.write("[\n")
-            json.dump(registros, archivo, ensure_ascii=False)
+            json.dump(primero, archivo_json, ensure_ascii=False)
 
             cantidad = 1
 
