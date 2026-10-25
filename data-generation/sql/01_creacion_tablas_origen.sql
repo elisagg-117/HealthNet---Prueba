@@ -6,7 +6,7 @@ create schema if not exists operacional;
 /* Seccion: creacion de tablas*/ 
 ------------------------------------
 
--- Tabla auxuliar: cat_pais
+-- Tabla auxuliar: cat_pais (con la fk garantiza que la ciudad pertenezca al pais indicado)
 create table operacional.cat_pais (
 id_pais serial primary key,
 nom_pais varchar(100) not null
@@ -18,7 +18,7 @@ id_ciudad serial primary key,
 nom_ciudad varchar(100) not null,
 pais_id int not null,
 constraint fk_ciudad_pais foreign key (pais_id) references operacional.cat_pais(id_pais),
-constraint unique_ciudad_pais unique (id_ciudad, pais_id) --validacion conjunta de ciudad-pais en las sedes
+constraint unique_ciudad_pais unique (id_ciudad, pais_id)
 );
 
 ------------------------------------------------------------
@@ -85,7 +85,7 @@ constraint fk_cama_sede foreign key (sede_id) references operacional.red_sedes(i
 
 
 
--- Tabla: encuentros (sede_id identifica la sede de la atencion y cod_procedimientos pued econtener varios separados por ; o null, esp_atentida no exige una especialida dpara agendar)
+-- Tabla: encuentros (sede_id identifica la sede de la atencion y cod_procedimientos pued econtener varios separados por ; o null, esp_atentida exige una especialidad para agendar)
 create table operacional.hce_encuentros (
 id_encuentro varchar(50) primary key,
 pac_id int not null,
@@ -110,7 +110,7 @@ constraint unique_encuentro_pac unique (id_encuentro, pac_id) --referenciamos un
 
 -- Tabla transaccional: dispensacion
 /*
-Cada registro representa a un medicamente y cantidad; pac_id garantiza qe sea el paciente del encuentro
+Cada registro representa a un medicamente y cantidad; la fk compuesta garantiza que pac_id corresponda al encuentro
 */
 create table operacional.far_dispensacion (
 id_dispensacion varchar(50) primary key,
@@ -125,7 +125,7 @@ vr_unitario numeric (12,2) not null,
 tip_prescripcion varchar(50) not null,
 constraint fk_disp_encuentro_pac foreign key (encuentro_id, pac_id) references operacional.hce_encuentros(id_encuentro, pac_id),
 constraint fk_disp_sede foreign key (sede_id) references operacional.red_sedes(id_sede)
-/*se conserva sede_disp_id como atributo independiente porque aunque el encuentro_id ya cuenta con una sede, la dispensacion puede ocurrir en una sede distinta*/
+/*se conserva sede_id como atributo independiente porque aunque el encuentro_id ya cuenta con una sede, la dispensacion puede ocurrir en una sede distinta*/
 );
 
 -- Tabla: citas
