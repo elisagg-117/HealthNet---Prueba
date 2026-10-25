@@ -12,6 +12,7 @@ ruta_paises = carpeta_base / "output" / "cat_pais.csv"
 ruta_ciudades = carpeta_base / "output" / "cat_ciudad.csv"
 ruta_sedes = carpeta_base / "output" / "red_sedes.csv"
 ruta_medicos = carpeta_base / "output" / "med_planta.csv"
+ruta_pacientes = carpeta_base / "output" / "pac_registro.csv"
 
 #info para conectar a la bd
 db_name = input("Nombre de la base de datos: ").strip()
@@ -208,9 +209,59 @@ with psycopg.connect(
         cursor.execute("select count(*) from operacional.med_planta;")
         cantidad_medicos = cursor.fetchone()[0]
 
+        # cargar info de pacientes
+        cursor.execute("select count(*) from operacional.pac_registro;")
+        cantidad_actual = cursor.fetchone()[0]
+
+        if cantidad_actual == 0:
+            with open(ruta_pacientes, "rb") as archivo:
+                with cursor.copy(
+                    """
+                    COPY operacional.pac_registro (
+                        id_pac,
+                        tip_doc,
+                        num_doc_hash,
+                        fec_nac,
+                        genero,
+                        ciudad_res_id,
+                        tip_aseguradora,
+                        id_eps,
+                        estrato_socioec,
+                        fec_primer_atencion,
+                        activo
+                    )
+                    FROM STDIN
+                    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+                    """
+                ) as copia:
+                    bloque = archivo.read(1024 * 1024)
+                    while bloque:
+                        copia.write(bloque)
+                        bloque = archivo.read(1024 * 1024)
+
+            cursor.execute(
+                """
+                select setval(
+                    pg_get_serial_sequence(
+                        'operacional.pac_registro', 'id_pac'
+                    ),
+                    (select max(id_pac) from operacional.pac_registro)
+                );
+                """
+            )
+        else:
+            print(
+                f"pac_registro: se conservan "
+                f"{cantidad_actual} registros existentes."
+            )
+
+        cursor.execute("select count(*) from operacional.pac_registro;")
+        cantidad_pacientes = cursor.fetchone()[0]
+
 
 print("\nProceso finalizado: ")
 print(f"Paises: {cantidad_cargada}")
 print(f"Ciudades: {cantidad_ciudades}")
 print(f"Sedes: {cantidad_sedes}")
 print(f"Medicos: {cantidad_medicos}")
+print(f"Pacientes: {cantidad_pacientes}")
