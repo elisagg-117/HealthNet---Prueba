@@ -2,7 +2,7 @@ import csv
 import json
 import random
 from pathlib import Path
-from datetim eimport date, timedelta
+from datetime import date, timedelta
 
 # Localizamos la configuración junto a este script.
 carpeta_base = Path(__file__).resolve().parent
