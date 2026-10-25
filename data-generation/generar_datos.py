@@ -1,6 +1,8 @@
 import csv
 import json
 import random
+
+import hashlib
 from pathlib import Path
 from datetime import date, timedelta
 
@@ -137,6 +139,89 @@ for id_med in range(1, config["cantidad_medicos"] + 1):
     medicos.append(medico)
 
 
+# Armado de pacientes
+aseguradoras = []
+
+for id_eps in range(1, 43):
+    aseguradora = {
+        "id_eps": id_eps,
+        "tip_aseguradora": aleatorio.choice([
+            "Pública",
+            "Privada",
+            "Mixta"
+        ])
+    }
+
+    aseguradoras.append(aseguradora)
+
+pacientes = []
+
+for id_pac in range(1, config["cantidad_pacientes"] + 1):
+    ciudad = aleatorio.choice(ciudades)
+    aseguradora = aleatorio.choice(aseguradoras)
+
+    edad = aleatorio.gauss(
+        config["edad_media"],
+        config["edad_desviacion"]
+    )
+
+    while edad < 0 or edad > config["edad_maxima"]:
+        edad = aleatorio.gauss(
+            config["edad_media"],
+            config["edad_desviacion"]
+        )
+
+    fec_nac = fecha_inicio - timedelta(days=int(edad * 365.25))
+
+    antiguedad_maxima = min(3650,(fecha_inicio - fec_nac).days)
+
+    fec_primer_atencion = fecha_inicio - timedelta(days=aleatorio.randint(0, antiguedad_maxima))
+
+    edad_calendario = fecha_inicio.year - fec_nac.year
+
+    if (fecha_inicio.month, fecha_inicio.day) < (fec_nac.month,fec_nac.day):
+        edad_calendario -= 1
+
+    if ciudad["pais_id"] == 1:
+        if edad_calendario < 7:
+            #tipo doc: registro civil
+            tip_doc = "RC"
+        elif edad_calendario < 18:
+            #tipo doc: tarjeta de identificacion
+            tip_doc = "TI"
+        else:
+            #tipo doc: cedula de ciudadania
+            tip_doc = "CC"
+    elif ciudad["pais_id"] == 2:
+        #tipo doc: documento nacional de identidad
+        tip_doc = "DNI"
+    else:
+        #tipo doc: cedula
+        tip_doc = "CED"
+
+    documento_sintetico = f"HealthNet-{id_pac}"
+
+    num_doc_hash = hashlib.sha256(
+        documento_sintetico.encode("utf-8")
+    ).hexdigest()
+
+    paciente = {
+        "id_pac": id_pac,
+        "tip_doc": tip_doc,
+        "num_doc_hash": num_doc_hash,
+        "fec_nac": fec_nac.isoformat(),
+        "genero": aleatorio.choice(["F", "M"]),
+        "ciudad_res_id": ciudad["id_ciudad"],
+        "tip_aseguradora": aseguradora["tip_aseguradora"],
+        "id_eps": aseguradora["id_eps"],
+        "estrato_socioec": aleatorio.randint(1, 6),
+        "fec_primer_atencion": fec_primer_atencion.isoformat(),
+        "activo": True
+    }
+
+    pacientes.append(paciente)
+
+# Construcction de archivos con datos generados.
 def guardar_archivos(tabla, registros, carpeta):
 
     campos = list(registros[0].keys())
@@ -160,10 +245,11 @@ def guardar_archivos(tabla, registros, carpeta):
 
     print(f"{tabla}: {len(registros)} registros, CSV y JSON")
 
-
+# Exportacion de archivos egenrados.
 guardar_archivos("cat_pais", paises, carpeta_salida)
 guardar_archivos("cat_ciudad", ciudades, carpeta_salida)
 guardar_archivos("red_sedes", sedes, carpeta_salida)
 guardar_archivos("med_planta", medicos, carpeta_salida)
+guardar_archivos("pac_registro", pacientes, carpeta_salida)
 
 print(f"\nArchivos guardados en: {carpeta_salida}")

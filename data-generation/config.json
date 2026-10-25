@@ -3,6 +3,10 @@
   "fecha_inicio": "2025-10-01",
   "fecha_fin": "2026-09-30",
   "cantidad_medicos": 2000,
+  "cantidad_pacientes": 100000,
+  "edad_media": 40,
+  "edad_desviacion": 20,
+  "edad_maxima": 95,
   "sedes_por_tipo": {
     "hospital": 3,
     "clinica": 16,
