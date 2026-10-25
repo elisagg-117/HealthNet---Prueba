@@ -313,7 +313,7 @@ def generar_camas():
         f"{cantidad_anomalias}"
     )
 
-# Armado de informacion de encuentros o atenciones
+# Armado de informacion de encuentros o atenciones v2
 def generar_encuentros(cantidad):
     # buscamos una sede
     sedes_por_id = {
@@ -336,14 +336,23 @@ def generar_encuentros(cantidad):
         pacientes_por_pais[pais_id].append(paciente)
 
     # seleccion intencionada de medicos para la primera prueba de generacion
-    medicos_generales = [
+    medicos_elegibles = [
         medico
         for medico in medicos
-        if medico["esp_principal"] == "Medicina general"
+        if medico["estado_activo"]
     ]
 
-    if not medicos_generales:
-        raise ValueError("No hay médicos de medicina general.")
+    if not medicos_elegibles:
+        raise ValueError("No hay médicos activos.")
+
+    diagnosticos_por_especialidad = {
+        "Medicina general": ["J00", "J06.9"],
+        "Medicina interna": ["I10", "E11.9"],
+        "Pediatría": ["J00", "J06.9"],
+        "Cardiología": ["I10"],
+        "Ginecología": ["N76.0"],
+        "Ortopedia": ["M54.9"]
+    }
 
     inicio = datetime.fromisoformat(config["fecha_inicio"])
     fin = datetime.fromisoformat(config["fecha_fin"])
@@ -356,16 +365,54 @@ def generar_encuentros(cantidad):
     }
 
     for numero in range(1, cantidad + 1):
-        medico = aleatorio.choice(medicos_generales)
+        medico = aleatorio.choice(medicos_elegibles)
         sede = sedes_por_id[medico["sede_id"]]
+        especialidad = medico["esp_principal"]
 
-        paciente = aleatorio.choice(pacientes_por_pais[sede["pais_id"]])
+        paciente = None
 
         fec_registro = inicio + timedelta(
             days=aleatorio.randint(0, dias_periodo),
             hours=aleatorio.randint(8, 17),
             minutes=aleatorio.randint(0, 59)
         )
+
+
+        for intento in range(1000):
+            candidato = aleatorio.choice(pacientes_por_pais[sede["pais_id"]])
+            nacimiento = date.fromisoformat(candidato["fec_nac"])
+            edad = fec_registro.year - nacimiento.year
+
+            if (fec_registro.month, fec_registro.day) < (
+                nacimiento.month,
+                nacimiento.day
+            ):
+                edad -= 1
+
+            if especialidad == "Pediatría" and edad >= 18:
+                continue
+
+            if edad < 18 and especialidad not in (
+                "Medicina general",
+                "Pediatría"
+            ):
+                continue
+
+            if (
+                especialidad == "Ginecología"
+                and candidato["genero"] != "F"
+            ):
+                continue
+
+            paciente = candidato
+            break
+
+        if paciente is None:
+            raise ValueError(
+                f"No se encontró un paciente compatible "
+                f"para {especialidad} en el país "
+                f"{sede['pais_id']}."
+            )
 
         fec_inicio_atencion = fec_registro + timedelta(
             minutes=aleatorio.randint(15, 90)
@@ -398,7 +445,7 @@ def generar_encuentros(cantidad):
             "fec_egreso": fec_egreso.isoformat(sep=" "),
             "tip_consulta": tip_consulta,
             "esp_atendida": medico["esp_principal"],
-            "diag_principal_cie10": "J00",
+            "diag_principal_cie10": aleatorio.choice(diagnosticos_por_especialidad[especialidad]),
             "diag_sec1_cie10": None,
             "cod_procedimientos": None,
             "vr_facturado": vr_facturado,
@@ -406,7 +453,7 @@ def generar_encuentros(cantidad):
         }
 
 
-# Construcction de archivos con datos generados. se modificó la forma de generar los registros ahora en lugar de la lista coompleta, genera un registro-> escribelo en json y csv -> continua
+# Construcction de archivos con datos generados. se modificó la forma de generar los registros ahora en lugar de la lista coompleta, genera un registro-> escribe en json y csv -> continua
 def guardar_archivos(tabla, registros, carpeta):
     registros = iter(registros)
     primero = next(registros, None)
