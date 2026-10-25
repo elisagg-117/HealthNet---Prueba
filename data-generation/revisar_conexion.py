@@ -34,7 +34,7 @@ with psycopg.connect(
 		""" select table_name from information_schema.tables where table_schema = 'operacional' and table_type = 'BASE TABLE' order by table_name; """
 	).fetchall()
 
-	print("Tablas encontradas: {len(tables)}")
+	print(f"\nTablas encontradas: {len(tablas)}")
 
 	for tabla in tablas:
 		print(f" - {tabla[0]}")
