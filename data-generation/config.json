@@ -1,0 +1,11 @@
+{
+  "semilla": 42,
+  "fecha_inicio": "2025-10-01",
+  "fecha_fin": "2026-09-30",
+  "sedes_por_tipo": {
+    "hospital": 3,
+    "clinica": 16,
+    "centro_medico": 42,
+    "centro_de_diagnostico": 21
+  }
+}
