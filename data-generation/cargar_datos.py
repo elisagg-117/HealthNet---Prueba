@@ -14,6 +14,7 @@ ruta_sedes = carpeta_base / "output" / "red_sedes.csv"
 ruta_medicos = carpeta_base / "output" / "med_planta.csv"
 ruta_pacientes = carpeta_base / "output" / "pac_registro.csv"
 ruta_camas = carpeta_base / "output" / "gcm_camas.csv"
+ruta_encuentros = carpeta_base / "output" / "hce_encuentros.csv"
 
 #info para conectar a la bd
 db_name = input("Nombre de la base de datos: ").strip()
@@ -311,6 +312,49 @@ with psycopg.connect(
         cursor.execute("select count(*) from operacional.gcm_camas;")
         cantidad_camas = cursor.fetchone()[0]
 
+        # Cargar info de encuentros
+        cursor.execute("select count(*) from operacional.hce_encuentros;")
+        cantidad_actual = cursor.fetchone()[0]
+
+        if cantidad_actual == 0:
+            with open(ruta_encuentros, "rb") as archivo:
+                with cursor.copy(
+                    """
+                    COPY operacional.hce_encuentros (
+                        id_encuentro,
+                        pac_id,
+                        med_id,
+                        sede_id,
+                        fec_registro,
+                        fec_inicio_atencion,
+                        fec_egreso,
+                        tip_consulta,
+                        esp_atendida,
+                        diag_principal_cie10,
+                        diag_sec1_cie10,
+                        cod_procedimientos,
+                        vr_facturado,
+                        estado_factura
+                    )
+                    FROM STDIN
+                    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+                    """
+                ) as copia:
+
+                    bloque = archivo.read(1024 * 1024)
+
+                    while bloque:
+                        copia.write(bloque)
+                        bloque = archivo.read(1024 * 1024)
+        else:
+            print(
+                f"hce_encuentros: se conservan "
+                f"{cantidad_actual} registros existentes."
+            )
+
+        cursor.execute("select count(*) from operacional.hce_encuentros;")
+        cantidad_encuentros = cursor.fetchone()[0]
+
 
 print("\nProceso finalizado: ")
 print(f"Paises: {cantidad_cargada}")
@@ -319,3 +363,4 @@ print(f"Sedes: {cantidad_sedes}")
 print(f"Medicos: {cantidad_medicos}")
 print(f"Pacientes: {cantidad_pacientes}")
 print(f"Mediciones de camas: {cantidad_camas}")
+print(f"Encuentros: {cantidad_encuentros}")
