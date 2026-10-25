@@ -15,7 +15,7 @@ with open(carpeta_base / "config.json", encoding="utf-8-sig") as archivo:
 inicio = datetime.fromisoformat(config["fecha_inicio"])
 fin = (datetime.fromisoformat(config["fecha_fin"]) + timedelta(days=1, seconds=-1))
 
-ruta_csv = carpeta_base / "output" / "hce_encuentros_muestra.csv"
+ruta_csv = carpeta_base / "output" / "hce_encuentros.csv"
 
 total = 0
 duplicados = 0

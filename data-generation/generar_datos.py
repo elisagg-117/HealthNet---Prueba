@@ -358,6 +358,22 @@ def generar_encuentros(cantidad):
     fin = datetime.fromisoformat(config["fecha_fin"])
     dias_periodo = (fin - inicio).days
 
+
+    procedimientos_por_especialidad = {
+        "Medicina general": ["PR001"],
+        "Medicina interna": ["PR001", "PR002"],
+        "Pediatría": ["PR001"],
+        "Cardiología": ["PR002"],
+        "Ginecología": ["PR001"],
+        "Ortopedia": ["PR003"]
+    }
+
+    precios_procedimientos = {
+        "PR001": 20,
+        "PR002": 35,
+        "PR003": 40
+    }
+
     factores_complejidad = {
         "Alta": 1.5,
         "Media": 1.2,
@@ -409,8 +425,8 @@ def generar_encuentros(cantidad):
 
         if paciente is None:
             raise ValueError(
-                f"No se encontró un paciente compatible "
-                f"para {especialidad} en el país "
+                f"No se ha encontrado un paciente compatible "
+                f"para {especialidad} en el pais "
                 f"{sede['pais_id']}."
             )
 
@@ -430,8 +446,36 @@ def generar_encuentros(cantidad):
         tarifa_base = 60 if tip_consulta == "Primera vez" else 45
         #buscamos el multiplicador de precio simulado  de acuerdo a la complejidad de la sede para construir una tarifa
         factor = factores_complejidad[sede["nivel_complejidad"]]
+
+        diag_principal = aleatorio.choice(diagnosticos_por_especialidad[especialidad])
+
+        diag_secundario = None
+
+        if (edad >= 18 and aleatorio.random() < config["porcentaje_diag_secundario"]):
+            opciones = [
+                codigo
+                for codigo in ["I10", "E11.9"]
+                if codigo != diag_principal
+            ]
+
+            diag_secundario = aleatorio.choice(opciones)
+
+        cod_procedimientos = None
+        costo_procedimientos = 0
+
+        if (aleatorio.random() < config["porcentaje_procedimientos"]):
+            opciones = procedimientos_por_especialidad[especialidad]
+
+            seleccionados = aleatorio.sample(opciones,aleatorio.randint(1, len(opciones)) )
+
+            cod_procedimientos = ";".join(seleccionados)
+
+            for codigo in seleccionados:
+                costo_procedimientos += precios_procedimientos[codigo]       
+
+
         # incluimos una variacion simulada ahsta de 10% en vr factrurado al considerar el tipo de consulta y complejidad de sede evitando total aleatoriedad
-        vr_facturado = round(tarifa_base * factor * aleatorio.uniform(0.9, 1.1),2)
+        vr_facturado = round( (tarifa_base + costo_procedimientos) * factor * aleatorio.uniform(0.9, 1.1),2)
 
         yield {
             "id_encuentro": f"ENC-{numero:08d}",
@@ -445,9 +489,9 @@ def generar_encuentros(cantidad):
             "fec_egreso": fec_egreso.isoformat(sep=" "),
             "tip_consulta": tip_consulta,
             "esp_atendida": medico["esp_principal"],
-            "diag_principal_cie10": aleatorio.choice(diagnosticos_por_especialidad[especialidad]),
-            "diag_sec1_cie10": None,
-            "cod_procedimientos": None,
+            "diag_principal_cie10": diag_principal,
+            "diag_sec1_cie10": diag_secundario,
+            "cod_procedimientos": cod_procedimientos,
             "vr_facturado": vr_facturado,
             "estado_factura": "Facturada"
         }
@@ -509,6 +553,7 @@ guardar_archivos("red_sedes", sedes, carpeta_salida)
 guardar_archivos("med_planta", medicos, carpeta_salida)
 guardar_archivos("pac_registro", pacientes, carpeta_salida)
 guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
-guardar_archivos("hce_encuentros_muestra", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
+guardar_archivos("hce_encuentros", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
+
 
 print(f"\nArchivos guardados en: {carpeta_salida}")
