@@ -274,10 +274,7 @@ def generar_camas():
         else:
             ocupacion_media = 0.70
 
-        proporcion = min(
-            1.0,
-            max(0.0, aleatorio.gauss(ocupacion_media, 0.05))
-        )
+        proporcion = min(1.0,max(0.0, aleatorio.gauss(ocupacion_media, 0.05))        )
 
         mantenimiento = 0
 
@@ -315,6 +312,99 @@ def generar_camas():
         f"Fechas fuera del perioddo generadas: "
         f"{cantidad_anomalias}"
     )
+
+# Armado de informacion de encuentros o atenciones
+def generar_encuentros(cantidad):
+    # buscamos una sede
+    sedes_por_id = {
+        sede["id_sede"]: sede
+        for sede in sedes
+    }
+    # relacionamos una ciudad con su pais
+    pais_por_ciudad = {
+        ciudad["id_ciudad"]: ciudad["pais_id"]
+        for ciudad in ciudades
+    }
+    # generamos una lista de pacientes por pais
+    pacientes_por_pais = {
+        pais["id_pais"]: []
+        for pais in paises
+    }
+    #agrupamos a los pacientes segun su residencia
+    for paciente in pacientes:
+        pais_id = pais_por_ciudad[paciente["ciudad_res_id"]]
+        pacientes_por_pais[pais_id].append(paciente)
+
+    # seleccion intencionada de medicos para la primera prueba de generacion
+    medicos_generales = [
+        medico
+        for medico in medicos
+        if medico["esp_principal"] == "Medicina general"
+    ]
+
+    if not medicos_generales:
+        raise ValueError("No hay médicos de medicina general.")
+
+    inicio = datetime.fromisoformat(config["fecha_inicio"])
+    fin = datetime.fromisoformat(config["fecha_fin"])
+    dias_periodo = (fin - inicio).days
+
+    factores_complejidad = {
+        "Alta": 1.5,
+        "Media": 1.2,
+        "Baja": 1.0
+    }
+
+    for numero in range(1, cantidad + 1):
+        medico = aleatorio.choice(medicos_generales)
+        sede = sedes_por_id[medico["sede_id"]]
+
+        paciente = aleatorio.choice(pacientes_por_pais[sede["pais_id"]])
+
+        fec_registro = inicio + timedelta(
+            days=aleatorio.randint(0, dias_periodo),
+            hours=aleatorio.randint(8, 17),
+            minutes=aleatorio.randint(0, 59)
+        )
+
+        fec_inicio_atencion = fec_registro + timedelta(
+            minutes=aleatorio.randint(15, 90)
+        )
+
+        fec_egreso = fec_inicio_atencion + timedelta(
+            minutes=aleatorio.randint(15, 45)
+        )
+
+        tip_consulta = aleatorio.choice([
+            "Primera vez",
+            "Control"
+        ])
+
+        tarifa_base = 60 if tip_consulta == "Primera vez" else 45
+        #buscamos el multiplicador de precio simulado  de acuerdo a la complejidad de la sede para construir una tarifa
+        factor = factores_complejidad[sede["nivel_complejidad"]]
+        # incluimos una variacion simulada ahsta de 10% en vr factrurado al considerar el tipo de consulta y complejidad de sede evitando total aleatoriedad
+        vr_facturado = round(tarifa_base * factor * aleatorio.uniform(0.9, 1.1),2)
+
+        yield {
+            "id_encuentro": f"ENC-{numero:08d}",
+            "pac_id": paciente["id_pac"],
+            "med_id": medico["id_med"],
+            "sede_id": sede["id_sede"],
+            "fec_registro": fec_registro.isoformat(sep=" "),
+            "fec_inicio_atencion": (
+                fec_inicio_atencion.isoformat(sep=" ")
+            ),
+            "fec_egreso": fec_egreso.isoformat(sep=" "),
+            "tip_consulta": tip_consulta,
+            "esp_atendida": medico["esp_principal"],
+            "diag_principal_cie10": "J00",
+            "diag_sec1_cie10": None,
+            "cod_procedimientos": None,
+            "vr_facturado": vr_facturado,
+            "estado_factura": "Facturada"
+        }
+
 
 # Construcction de archivos con datos generados. se modificó la forma de generar los registros ahora en lugar de la lista coompleta, genera un registro-> escribelo en json y csv -> continua
 def guardar_archivos(tabla, registros, carpeta):
@@ -372,5 +462,6 @@ guardar_archivos("red_sedes", sedes, carpeta_salida)
 guardar_archivos("med_planta", medicos, carpeta_salida)
 guardar_archivos("pac_registro", pacientes, carpeta_salida)
 guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
+guardar_archivos("hce_encuentros_muestra", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
 
 print(f"\nArchivos guardados en: {carpeta_salida}")
