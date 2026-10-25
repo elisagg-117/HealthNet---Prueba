@@ -2,6 +2,7 @@
   "semilla": 42,
   "fecha_inicio": "2025-10-01",
   "fecha_fin": "2026-09-30",
+  "cantidad_medicos": 2000,
   "sedes_por_tipo": {
     "hospital": 3,
     "clinica": 16,
