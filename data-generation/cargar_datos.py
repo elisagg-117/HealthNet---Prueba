@@ -11,6 +11,7 @@ carpeta_base = Path(__file__).resolve().parent
 ruta_paises = carpeta_base / "output" / "cat_pais.csv"
 ruta_ciudades = carpeta_base / "output" / "cat_ciudad.csv"
 ruta_sedes = carpeta_base / "output" / "red_sedes.csv"
+ruta_medicos = carpeta_base / "output" / "med_planta.csv"
 
 #info para conectar a la bd
 db_name = input("Nombre de la base de datos: ").strip()
@@ -158,7 +159,58 @@ with psycopg.connect(
         cursor.execute("select count(*) from operacional.red_sedes;")
         cantidad_sedes = cursor.fetchone()[0]
 
+        # cargar info de medicos
+        
+        cursor.execute("select count(*) from operacional.med_planta;")
+        cantidad_actual = cursor.fetchone()[0]
+
+        if cantidad_actual == 0:
+            with open(ruta_medicos, "rb") as archivo:
+                with cursor.copy(
+                    """
+                    COPY operacional.med_planta (
+                        id_med,
+                        esp_principal,
+                        esp_secundaria,
+                        sede_id,
+                        fec_ingreso,
+                        tip_contrato,
+                        jornada,
+                        estado_activo
+                    )
+                    FROM STDIN
+                    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+                    """
+                ) as copia:
+
+                    bloque = archivo.read(1024 * 1024)
+
+                    while bloque:
+                        copia.write(bloque)
+                        bloque = archivo.read(1024 * 1024)
+
+            cursor.execute(
+                """
+                select setval(
+                    pg_get_serial_sequence(
+                        'operacional.med_planta', 'id_med'
+                    ),
+                    (select max(id_med) from operacional.med_planta)
+                );
+                """
+            )
+        else:
+            print(
+                f"med_planta: se conservan "
+                f"{cantidad_actual} registros existentes."
+            )
+
+        cursor.execute("select count(*) from operacional.med_planta;")
+        cantidad_medicos = cursor.fetchone()[0]
+
+
 print("\nProceso finalizado: ")
 print(f"Paises: {cantidad_cargada}")
 print(f"Ciudades: {cantidad_ciudades}")
 print(f"Sedes: {cantidad_sedes}")
+print(f"Medicos: {cantidad_medicos}")
