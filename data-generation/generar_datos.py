@@ -4,7 +4,7 @@ import random
 
 import hashlib
 from pathlib import Path
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 # Localizamos la configuración junto a este script.
 carpeta_base = Path(__file__).resolve().parent
@@ -221,8 +221,108 @@ for id_pac in range(1, config["cantidad_pacientes"] + 1):
 
     pacientes.append(paciente)
 
-# Construcction de archivos con datos generados.
+# Armado de info camas y mediciones condsideradas. Se usa una def y yield cambiando la logica de construccion de registros por el volumen minimo, asi se intenta hacer progresivo
+def generar_camas():
+    unidades = []
+
+    campos_capacidad = [
+        ("General", "cap_camas_gen"),
+        ("UCI", "cap_camas_uci"),
+        ("Cirugía", "cap_camas_cirugia"),
+        ("Urgencias", "cap_camas_urg")
+    ]
+
+    for sede in sedes:
+        for tipo_unidad, campo in campos_capacidad:
+            if sede[campo] > 0:
+                unidades.append(
+                    (sede, tipo_unidad, sede[campo])
+                )
+
+    if not unidades:
+        raise ValueError("No hay unidades con capacidad de camas.")
+
+    cantidad = config["cantidad_camas"]
+
+    cantidad_anomalias = round(cantidad * config["porcentaje_anomalias"])
+
+    ids_anomalos = set(aleatorio.sample(range(1, cantidad + 1),cantidad_anomalias))
+
+    inicio = datetime.fromisoformat(config["fecha_inicio"])
+
+    fin = (datetime.fromisoformat(config["fecha_fin"]) + timedelta(days=1, seconds=-1))
+
+    segundos_periodo = int((fin - inicio).total_seconds())
+    desplazamiento = timedelta(days=(fin - inicio).days + 31)
+
+    for id_registro in range(1, cantidad + 1):
+        sede, tipo_unidad, capacidad = unidades[(id_registro - 1) % len(unidades)]
+
+        momento = inicio + timedelta(
+            seconds=(
+                (id_registro - 1)
+                * segundos_periodo
+                // max(cantidad - 1, 1)
+            )
+        )
+
+        if sede["tip_sede"] == "hospital":
+            ocupacion_media = 0.85
+
+            if momento.month in config["meses_alta_demanda"]:
+                ocupacion_media = 0.95
+        else:
+            ocupacion_media = 0.70
+
+        proporcion = min(
+            1.0,
+            max(0.0, aleatorio.gauss(ocupacion_media, 0.05))
+        )
+
+        mantenimiento = 0
+
+        if capacidad > 1 and aleatorio.random() < 0.10:
+            mantenimiento = aleatorio.randint(
+                1,
+                max(1, capacidad // 10)
+            )
+
+        ocupadas = round(
+            (capacidad - mantenimiento) * proporcion
+        )
+
+        disponibles = capacidad - mantenimiento - ocupadas
+
+        if id_registro in ids_anomalos:
+            momento += desplazamiento
+
+        yield {
+            "id_registro_cama": id_registro,
+            "sede_id": sede["id_sede"],
+            "tip_unidad": tipo_unidad,
+            "fec_hora_registro": momento.isoformat(sep=" "),
+            "num_camas_ocupadas": ocupadas,
+            "num_camas_disp": disponibles,
+            "num_camas_mant": mantenimiento,
+            "motivo_indisponibilidad": (
+                "Mantenimiento programado"
+                if mantenimiento > 0
+                else None
+            )
+        }
+
+    print(
+        f"Fechas fuera del perioddo generadas: "
+        f"{cantidad_anomalias}"
+    )
+
+# Construcction de archivos con datos generados. se modificó la forma de generar los registros ahora en lugar de la lista coompleta, genera un registro-> escribelo en json y csv -> continua
 def guardar_archivos(tabla, registros, carpeta):
+    registros = iter(registros)
+    primero = next(registros, None)
+
+    if primero is None:
+        raise ValueError(f"No hay registros para {tabla}.")
 
     campos = list(registros[0].keys())
 
@@ -231,19 +331,39 @@ def guardar_archivos(tabla, registros, carpeta):
         "w",
         newline="",
         encoding="utf-8"
-    ) as archivo:
-        escritor = csv.DictWriter(archivo, fieldnames=campos)
-        escritor.writeheader()
-        escritor.writerows(registros)
+    ) as archivo_csv:
 
-    with open(
-        carpeta / f"{tabla}.json",
-        "w",
-        encoding="utf-8"
-    ) as archivo:
-        json.dump(registros, archivo, ensure_ascii=False, indent=2)
+        with open (
+            carpeta / f"{tabla}.json",
+            "w",
+            encoding="utf-8"
+        ) as archivo_json:
 
-    print(f"{tabla}: {len(registros)} registros, CSV y JSON")
+            escritor = csv.DictWriter(archivo_csv, fieldnames=campos)
+            escritor.writeheader()
+            escritor.writerows(primero)
+
+            archivo_json.write("[\n")
+            json.dump(registros, archivo, ensure_ascii=False)
+
+            cantidad = 1
+
+            for registro in registros:
+                escritor.writerow(registro)
+
+                archivo_json.write(",\n")
+                json.dump(
+                    registro,
+                    archivo_json,
+                    ensure_ascii=False
+                )
+
+                cantidad += 1
+
+            archivo_json.write("\n]\n")
+
+    
+    print(f"{tabla}: {cantidad} registros, CSV y JSON")
 
 # Exportacion de archivos egenrados.
 guardar_archivos("cat_pais", paises, carpeta_salida)
@@ -251,5 +371,6 @@ guardar_archivos("cat_ciudad", ciudades, carpeta_salida)
 guardar_archivos("red_sedes", sedes, carpeta_salida)
 guardar_archivos("med_planta", medicos, carpeta_salida)
 guardar_archivos("pac_registro", pacientes, carpeta_salida)
+guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
 
 print(f"\nArchivos guardados en: {carpeta_salida}")
