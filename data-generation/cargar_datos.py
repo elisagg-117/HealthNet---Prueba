@@ -13,6 +13,7 @@ ruta_ciudades = carpeta_base / "output" / "cat_ciudad.csv"
 ruta_sedes = carpeta_base / "output" / "red_sedes.csv"
 ruta_medicos = carpeta_base / "output" / "med_planta.csv"
 ruta_pacientes = carpeta_base / "output" / "pac_registro.csv"
+ruta_camas = carpeta_base / "output" / "gcm_camas.csv"
 
 #info para conectar a la bd
 db_name = input("Nombre de la base de datos: ").strip()
@@ -258,6 +259,58 @@ with psycopg.connect(
         cursor.execute("select count(*) from operacional.pac_registro;")
         cantidad_pacientes = cursor.fetchone()[0]
 
+        # cargar info de camas ocupacion
+        cursor.execute("select count(*) from operacional.gcm_camas;")
+        cantidad_actual = cursor.fetchone()[0]
+
+        if cantidad_actual == 0:
+            with open(ruta_camas, "rb") as archivo:
+                with cursor.copy(
+                    """
+                    COPY operacional.gcm_camas (
+                        id_registro_cama,
+                        sede_id,
+                        tip_unidad,
+                        fec_hora_registro,
+                        num_camas_ocupadas,
+                        num_camas_disp,
+                        num_camas_mant,
+                        motivo_indisponibilidad
+                    )
+                    FROM STDIN
+                    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+                    """
+                ) as copia:
+
+                    bloque = archivo.read(1024 * 1024)
+
+                    while bloque:
+                        copia.write(bloque)
+                        bloque = archivo.read(1024 * 1024)
+
+            cursor.execute(
+                """
+                select setval(
+                    pg_get_serial_sequence(
+                        'operacional.gcm_camas',
+                        'id_registro_cama'
+                    ),
+                    (
+                        select max(id_registro_cama)
+                        from operacional.gcm_camas
+                    )
+                );
+                """
+            )
+        else:
+            print(
+                f"gcm_camas: se conservan "
+                f"{cantidad_actual} registros existentes."
+            )
+
+        cursor.execute("select count(*) from operacional.gcm_camas;")
+        cantidad_camas = cursor.fetchone()[0]
+
 
 print("\nProceso finalizado: ")
 print(f"Paises: {cantidad_cargada}")
@@ -265,3 +318,4 @@ print(f"Ciudades: {cantidad_ciudades}")
 print(f"Sedes: {cantidad_sedes}")
 print(f"Medicos: {cantidad_medicos}")
 print(f"Pacientes: {cantidad_pacientes}")
+print(f"Mediciones de camas: {cantidad_camas}")
