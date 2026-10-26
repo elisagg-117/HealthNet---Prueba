@@ -30,6 +30,11 @@ param keyVaultName string
 ])
 param keyVaultSku string
 
+param logAnalyticsName string
+param logRetentionDays int
+param factoryDiagnosticsName string
+
+
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: resourceGroupName
   location: location
@@ -52,6 +57,9 @@ module resources './resources.bicep' = {
     selfHostedIrName: selfHostedIrName
     keyVaultName: keyVaultName
     keyVaultSku: keyVaultSku
+    logAnalyticsName: logAnalyticsName
+    logRetentionDays: logRetentionDays
+    factoryDiagnosticsName: factoryDiagnosticsName
   }
 }
 
@@ -74,3 +82,8 @@ output vaultId string = resources.outputs.vaultId
 output vaultName string = resources.outputs.vaultName
 output vaultUri string = resources.outputs.vaultUri
 output vaultRoleAssignmentId string = resources.outputs.vaultRoleAssignmentId
+
+output logWorkspaceId string = resources.outputs.logWorkspaceId
+output logWorkspaceName string = resources.outputs.logWorkspaceName
+output logWorkspaceCustomerId string = resources.outputs.logWorkspaceCustomerId
+output factoryDiagnosticsId string = resources.outputs.factoryDiagnosticsId

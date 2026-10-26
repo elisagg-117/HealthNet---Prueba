@@ -9,6 +9,9 @@ param dataFactoryName string
 param selfHostedIrName string
 param keyVaultName string
 param keyVaultSku string
+param logAnalyticsName string
+param logRetentionDays int
+param factoryDiagnosticsName string
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -142,3 +145,52 @@ output vaultId string = vault.id
 output vaultName string = vault.name
 output vaultUri string = vault.properties.vaultUri
 output vaultRoleAssignmentId string = factoryVaultRole.id
+
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: logAnalyticsName
+  location: location
+  tags: {
+    project: 'HealthNet'
+    environment: environment
+  }
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: logRetentionDays
+    features: {
+      disableLocalAuth: true
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+resource factoryDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: factoryDiagnosticsName
+  scope: factory
+  properties: {
+    workspaceId: logWorkspace.id
+    logAnalyticsDestinationType: 'Dedicated'
+    logs: [
+      {
+        category: 'PipelineRuns'
+        enabled: true
+      }
+      {
+        category: 'ActivityRuns'
+        enabled: true
+      }
+      {
+        category: 'TriggerRuns'
+        enabled: true
+      }
+    ]
+  }
+}
+
+output logWorkspaceId string = logWorkspace.id
+output logWorkspaceName string = logWorkspace.name
+output logWorkspaceCustomerId string = logWorkspace.properties.customerId
+output factoryDiagnosticsId string = factoryDiagnostics.id

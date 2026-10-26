@@ -35,6 +35,15 @@
     },
     "keyVaultSku": {
       "value": "standard"
+    },
+    "logAnalyticsName": {
+      "value": "law-healthnet-dev"
+    },
+    "logRetentionDays": {
+      "value": 30
+    },
+    "factoryDiagnosticsName": {
+      "value": "diag-adf-law"
     }
   }
 }
