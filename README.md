@@ -19,23 +19,57 @@ Las capturas de evidencia se guardan en `/docs/FASE-1`
 
 # Informacion para generacion y carga de datos
 Se necesita Python y PostgreSQL en ejecución. La conexión local utiliza 127.0.0.1 y el puerto 5431
-Crear la base de datos y ejecutar en ella el archivo data-generation/sql/01_create_source_tables.sql
+Crear la base de datos y ejecutar en ella el archivo: data-generation/sql/01_create_source_tables.sql
+Este script crea las 9 tablas utilizadas como origen de datos:
+
+cat_pais -> Catálogo de países	- 3 registros
+cat_ciudad -> Catálogo de ciudades - 9 registros
+red_sedes -> Catálogo de sedes de la red - 82 registros
+med_planta -> Médicos registrados - 2000 registros
+pac_registro -> Pacientes registrados - 100000 registros
+gcm_camas -> Información de camas - 500000 registros
+hce_encuentros -> Encuentros clínicos - 2000000 registros
+far_dispensacion -> Dispensaciones de medicamentos - 3030000 registros
+age_citas -> Citas médicas - 1500000 registros
+
+El volumen total esperado es de 7132094 registros.
+
+Las tablas cat_pais, cat_ciudad y red_sedes funcionan como tablas auxiliares para mantener consistencia en las relaciones del resto del modelo.
+
+## Preparación del entorno
+
 Desde la raíz del proyecto, preparar el entorno de Python:
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install "psycopg[binary]"
 
-Revisar data-generation/config.json, donde se definen la semilla y las cantidades de datos. La semilla permite repetir la generación con la misma configuración
+Revisar data-generation/config.json, donde se definen la semilla y las cantidades de datos
 
-Generar los archivos CSV y JSON:
+
+## Generar los archivos CSV y JSON:
 .\.venv\Scripts\python.exe .\data-generation\generar_datos.py
 
 Los archivos se guardan en data-generation/output/
 
-Cargar los datos en PostgreSQL:
+## Anomalías controladas
+
+Durante la generación se incluyen de forma intencional algunos casos utilizados posteriormente para validar reglas de calidad de datos.
+- gcm_camas: 5000 registros con fechas fuera del período esperado
+- far_dispensacion: 30000 duplicados, incluidos dentro de los 3030000 registros generados
+- age_citas: 12068 registros con tiempos de espera negativos
+
+También se generan valores nulos de forma controlada para representar situaciones válidas del dominio.
+En age_citas, 75,000 registros, equivalentes al 5 % del total, contienen esp_solicitada como valor nulo.
+
+## Cargar los datos en PostgreSQL:
 .\.venv\Scripts\python.exe .\data-generation\cargar_datos.py
 
 El cargador solicita el nombre de la base, usuario y contraseña. Conserva las tablas que ya contienen registros
-Para comprobar las cantidades cargadas, ejecutar data-generation/sql/02_validar_carga.sql
+
+## Validación de la carga
+Para comprobar las cantidades cargadas en cada tabla, ejecutar:
+data-generation/sql/02_validar_carga.sql
+El archivo: docs/evidencia_carga.csv se conserva como resultado de esta validación ejecutada en la bd y presenta como evidencia
+ 
 
 ## Herramientas utilizadas
 PostgreSQL
