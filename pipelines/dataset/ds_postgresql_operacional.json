@@ -1,0 +1,28 @@
+﻿{
+  "name": "ds_postgresql_operacional",
+  "properties": {
+    "additionalProperties": null,
+    "annotations": [],
+    "description": null,
+    "folder": null,
+    "linkedServiceName": {
+      "parameters": null,
+      "referenceName": "ls_postgresql_healthnet",
+      "type": "LinkedServiceReference"
+    },
+    "parameters": {
+      "p_tabla": {
+        "defaultValue": "cat_pais",
+        "type": "string"
+      }
+    },
+    "schema": [],
+    "schemaTypePropertiesSchema": "operacional",
+    "structure": null,
+    "table": {
+      "type": "Expression",
+      "value": "@dataset().p_tabla"
+    },
+    "type": "PostgreSqlV2Table"
+  }
+}

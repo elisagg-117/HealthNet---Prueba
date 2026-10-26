@@ -67,6 +67,7 @@ Data Factory: dataFactoryName, selfHostedIrName
 Key Vault: keyVaultName, keyVaultSku
 Monitoreo: logAnalyticsName, logRetentionDays, factoryDiagnosticsName
 Notificaciones: actionGroupName, actionGroupLocation, alertEmail
+Gestión de secretos: vaultOperatorObjectId
 
 No se guardan contraseñas ni claves en estos archivos. Antes de desplegar en otra suscripción, ajustar los nombres y el correo.
 
@@ -112,3 +113,11 @@ ADF envía los registros de pipelines, actividades y triggers a Log Analytics. E
 
 Las salidas de Bicep incluyen nombres, identificadores y endpoints de los recursos, sin claves ni contraseñas.
 
+## Configuración comprobada
+
+- Agente del Self-hosted Integration Runtime instalado y en linea
+- Contraseña de adf_lectura guardada en Key Vault
+- Conexiones de ADF a Key Vault, PostgreSQL y Data Lake probadas correctamente
+- Revision de Log Analytics W los registros de las ejecuciones
+
+Las capturas de evidencia se guardan en `/docs`
