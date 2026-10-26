@@ -1,0 +1,14 @@
+﻿{
+  "name": "ls_keyvault_healthnet",
+  "properties": {
+    "additionalProperties": null,
+    "annotations": [],
+    "baseUrl": "https://kv-healthnet-dev-2026eg.vault.azure.net/",
+    "connectVia": null,
+    "credential": null,
+    "description": null,
+    "parameters": null,
+    "type": "AzureKeyVault",
+    "version": null
+  }
+}

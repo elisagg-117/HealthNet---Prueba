@@ -1,0 +1,45 @@
+﻿{
+  "name": "ls_postgresql_healthnet",
+  "properties": {
+    "additionalProperties": null,
+    "annotations": [],
+    "authenticationType": "Basic",
+    "commandTimeout": null,
+    "connectVia": {
+      "parameters": null,
+      "referenceName": "ir-healthnet-local-dev",
+      "type": "IntegrationRuntimeReference"
+    },
+    "connectionTimeout": null,
+    "database": "HealthNet",
+    "description": null,
+    "encoding": null,
+    "encryptedCredential": null,
+    "logParameters": null,
+    "parameters": null,
+    "password": {
+      "secretName": "postgres-adf-password",
+      "secretVersion": "c01b117f67214a05aea7a6aeea83afd2",
+      "store": {
+        "parameters": null,
+        "referenceName": "ls_keyvault_healthnet",
+        "type": "LinkedServiceReference"
+      },
+      "type": "AzureKeyVaultSecret"
+    },
+    "pooling": null,
+    "port": "5431",
+    "readBufferSize": null,
+    "schema": null,
+    "server": "127.0.0.1",
+    "sslCertificate": null,
+    "sslKey": null,
+    "sslMode": 2,
+    "sslPassword": null,
+    "timezone": null,
+    "trustServerCertificate": null,
+    "type": "PostgreSqlV2",
+    "username": "adf_lectura",
+    "version": null
+  }
+}
