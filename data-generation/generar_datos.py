@@ -496,6 +496,93 @@ def generar_encuentros(cantidad):
             "estado_factura": "Facturada"
         }
 
+# Armado de informacion de dispensacion
+def generar_dispensaciones(cantidad):
+    medicamentos = [
+        {
+            "codigo": "MED001",
+            "nombre": "Medicamento A (caja)",
+            "precio": 10.0
+        },
+        {
+            "codigo": "MED002",
+            "nombre": "Medicamento B (caja)",
+            "precio": 20.0
+        },
+        {
+            "codigo": "MED003",
+            "nombre": "Medicamento C (caja)",
+            "precio": 30.0
+        }
+    ]
+    # ubicamos el archivo de encuentros creado anterioremente
+    ruta_encuentros = (carpeta_salida / "hce_encuentros.csv")
+    contador = 0
+    #selecciona los num de registros a duplicar
+    registros_a_duplicar = set(aleatorio.sample(range(1, cantidad + 1),round(cantidad * config["porcentaje_anomalias"])))
+
+    with open(
+        ruta_encuentros,
+        newline="",
+        encoding="utf-8"
+    ) as archivo:
+
+        lector = csv.DictReader(archivo)
+
+        for encuentro in lector:
+            numero_medicamentos = aleatorio.choices(
+                [1, 2, 3],
+                weights=[50, 35, 15],
+                k=1
+            )[0]
+
+            seleccionados = aleatorio.sample(medicamentos,numero_medicamentos)
+
+            for medicamento in seleccionados:
+                if contador >= cantidad:
+                    break
+
+                contador += 1
+
+                fec_dispensacion = (datetime.fromisoformat(encuentro["fec_egreso"])+ timedelta( minutes=aleatorio.randint(0, 90)))
+                #definicion de nuestro diccionario
+                registro = {
+                    "id_dispensacion": f"DISP-{contador:08d}",
+                    "encuentro_id": encuentro["id_encuentro"],
+                    "pac_id": int(encuentro["pac_id"]),
+                    "sede_id": int(encuentro["sede_id"]),
+                    "fec_dispensacion": (
+                        fec_dispensacion.isoformat(sep=" ")
+                    ),
+                    "cod_medicamento": medicamento["codigo"],
+                    "nom_medicamento": medicamento["nombre"],
+                    "cantidad": aleatorio.choices(
+                        [1, 2, 3],
+                        weights=[60, 30, 10],
+                        k=1
+                    )[0],
+                    "vr_unitario": medicamento["precio"],
+                    "tip_prescripcion": "Ambulatoria"
+                }
+                # entrega del registro de dispensacion original para utilizar sus datos
+                yield registro
+                # cambiamos el identificador, lo demas permanece igual
+                if contador in registros_a_duplicar:
+                    duplicado = registro.copy()
+                    duplicado["id_dispensacion"] = (f"DISP-DUP-{contador:08d}")
+                    #entrgamos la copia del registro apra que se escriba tambien
+                    yield duplicado
+
+            if contador >= cantidad:
+                break
+
+    if contador < cantidad:
+        raise ValueError(
+            f"Se generaron {contador} dispensaciones; "
+            f"se solicitaron {cantidad}."
+        )
+
+
 
 # Construcction de archivos con datos generados. se modificó la forma de generar los registros ahora en lugar de la lista coompleta, genera un registro-> escribe en json y csv -> continua
 def guardar_archivos(tabla, registros, carpeta):
@@ -554,6 +641,7 @@ guardar_archivos("med_planta", medicos, carpeta_salida)
 guardar_archivos("pac_registro", pacientes, carpeta_salida)
 guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
 guardar_archivos("hce_encuentros", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
+guardar_archivos("far_dispensacion_muestra", generar_dispensaciones(config["cantidad_dispensaciones"]),carpeta_salida)
 
 
 print(f"\nArchivos guardados en: {carpeta_salida}")
