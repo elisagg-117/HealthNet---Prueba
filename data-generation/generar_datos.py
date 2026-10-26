@@ -629,6 +629,9 @@ def generar_citas(cantidad):
                 especialidad = None
 
             if estado == "Atendida":
+                if aleatorio.random() < config["porcentaje_anomalias"]:
+                    inicio_atencion = llegada - timedelta(minutes=aleatorio.randint(1, 30))
+
                 hora_llegada = llegada.time().isoformat()
                 hora_inicio = inicio_atencion.time().isoformat()
             else:
