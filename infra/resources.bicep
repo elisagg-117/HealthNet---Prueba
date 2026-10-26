@@ -12,6 +12,9 @@ param keyVaultSku string
 param logAnalyticsName string
 param logRetentionDays int
 param factoryDiagnosticsName string
+param actionGroupName string
+param actionGroupLocation string
+param alertEmail string
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -194,3 +197,26 @@ output logWorkspaceId string = logWorkspace.id
 output logWorkspaceName string = logWorkspace.name
 output logWorkspaceCustomerId string = logWorkspace.properties.customerId
 output factoryDiagnosticsId string = factoryDiagnostics.id
+
+resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+  name: actionGroupName
+  location: actionGroupLocation
+  tags: {
+    project: 'HealthNet'
+    environment: environment
+  }
+  properties: {
+    groupShortName: 'hn-${environment}'
+    enabled: true
+    emailReceivers: [
+      {
+        name: 'correo-alertas'
+        emailAddress: alertEmail
+        useCommonAlertSchema: true
+      }
+    ]
+  }
+}
+
+output actionGroupId string = actionGroup.id
+output actionGroupResourceName string = actionGroup.name

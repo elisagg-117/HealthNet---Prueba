@@ -44,6 +44,15 @@
     },
     "factoryDiagnosticsName": {
       "value": "diag-adf-law"
+    },
+    "actionGroupName": {
+      "value": "ag-healthnet-prod"
+    },
+    "actionGroupLocation": {
+      "value": "global"
+    },
+    "alertEmail": {
+      "value": "cristel.gg262@gmail.com"
     }
   }
 }
