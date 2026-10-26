@@ -83,24 +83,20 @@ Si alguno no está registrado, registrarlo antes de desplegar. Durante la prueba
 
 ## Validar y desplegar
 
-Ejecutar desde la raíz del repositorio. Reemplazar `ID..` por el ID de la suscripcion:
-# Powershell
+Ejecutar en powershell desde la raíz del repositorio. Reemplazar `ID..` por el ID de la suscripcion:
 $subscriptionId = "ID"
 $ambiente = "dev"
 
 
 Validar:
-# Powershell
 az deployment sub validate --subscription $subscriptionId --name "healthnet-$ambiente" --location southcentralus --template-file .\infra\main.bicep --parameters "@infra/parameters/$ambiente.parameters.json"
 
 
 Revisar los cambios:
-# Powershell
 az deployment sub what-if --subscription $subscriptionId --name "healthnet-$ambiente" --location southcentralus --template-file .\infra\main.bicep --parameters "@infra/parameters/$ambiente.parameters.json"
 
 
 Después de revisar el resultado, desplegar:
-# Powershell
 az deployment sub create --subscription $subscriptionId --name "healthnet-$ambiente" --location southcentralus --template-file .\infra\main.bicep --parameters "@infra/parameters/$ambiente.parameters.json"
 
 Para usar PROD, cambiar `$ambiente` a `"prd"`
