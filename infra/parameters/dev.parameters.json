@@ -10,6 +10,19 @@
     },
     "environment": {
       "value": "dev"
+    },
+    "storageAccountName": {
+      "value": "sthealthnetdev2026eg"
+    },
+    "storageSku": {
+      "value": "Standard_LRS"
+    },
+    "containerNames": {
+      "value": [
+        "bronze",
+        "silver",
+        "gold"
+      ]
     }
   }
 }
