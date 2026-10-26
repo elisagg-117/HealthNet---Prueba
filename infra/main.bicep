@@ -38,6 +38,8 @@ param actionGroupName string
 param actionGroupLocation string
 param alertEmail string
 
+param vaultOperatorObjectId string
+
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: resourceGroupName
@@ -67,6 +69,7 @@ module resources './resources.bicep' = {
     actionGroupName: actionGroupName
     actionGroupLocation: actionGroupLocation
     alertEmail: alertEmail
+    vaultOperatorObjectId: vaultOperatorObjectId
   }
 }
 
@@ -97,3 +100,5 @@ output factoryDiagnosticsId string = resources.outputs.factoryDiagnosticsId
 
 output actionGroupId string = resources.outputs.actionGroupId
 output actionGroupName string = resources.outputs.actionGroupResourceName
+
+output secretsOfficerAssignmentId string = resources.outputs.secretsOfficerAssignmentId

@@ -53,6 +53,9 @@
     },
     "alertEmail": {
       "value": "cristel.gg262@gmail.com"
+    },
+    "vaultOperatorObjectId": {
+      "value": "a07e2c17-8d37-491d-b90e-7dd303c55da4"
     }
   }
 }

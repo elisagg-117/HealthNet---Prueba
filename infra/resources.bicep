@@ -15,6 +15,7 @@ param factoryDiagnosticsName string
 param actionGroupName string
 param actionGroupLocation string
 param alertEmail string
+param vaultOperatorObjectId string
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -220,3 +221,20 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
 
 output actionGroupId string = actionGroup.id
 output actionGroupResourceName string = actionGroup.name
+
+var secretsOfficerRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+)
+
+resource vaultSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(vault.id, vaultOperatorObjectId, secretsOfficerRoleId)
+  scope: vault
+  properties: {
+    roleDefinitionId: secretsOfficerRoleId
+    principalId: vaultOperatorObjectId
+    principalType: 'User'
+  }
+}
+
+output secretsOfficerAssignmentId string = vaultSecretsOfficerRole.id
