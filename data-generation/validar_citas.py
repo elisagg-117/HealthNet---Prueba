@@ -7,7 +7,7 @@ from pathlib import Path
 from datetime import time
 
 carpeta_base = Path(__file__).resolve().parent
-ruta_csv = carpeta_base / "output" / "age_citas_muestra.csv"
+ruta_csv = carpeta_base / "output" / "age_citas.csv"
 
 total = 0
 especialidades_nulas = 0
@@ -55,6 +55,3 @@ print(f"Esperas negativas: {esperas_negativas}")
 for estado, cantidad in estados.items():
     print(f"{estado}: {cantidad}")
 
-
-
-print(f"Total: {total}")

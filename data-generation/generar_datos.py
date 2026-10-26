@@ -722,7 +722,7 @@ guardar_archivos("pac_registro", pacientes, carpeta_salida)
 guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
 guardar_archivos("hce_encuentros", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
 guardar_archivos("far_dispensacion", generar_dispensaciones(config["cantidad_dispensaciones"]),carpeta_salida)
-guardar_archivos("age_citas_muestra",generar_citas(config["cantidad_citas"]),carpeta_salida)
+guardar_archivos("age_citas",generar_citas(config["cantidad_citas"]),carpeta_salida)
 
 
 print(f"\nArchivos guardados en: {carpeta_salida}")

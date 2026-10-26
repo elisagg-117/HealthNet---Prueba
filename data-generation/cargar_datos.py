@@ -16,6 +16,7 @@ ruta_pacientes = carpeta_base / "output" / "pac_registro.csv"
 ruta_camas = carpeta_base / "output" / "gcm_camas.csv"
 ruta_encuentros = carpeta_base / "output" / "hce_encuentros.csv"
 ruta_dispensaciones = carpeta_base / "output" / "far_dispensacion.csv"
+ruta_citas = carpeta_base / "output" / "age_citas.csv"
 
 #info para conectar a la bd
 db_name = input("Nombre de la base de datos: ").strip()
@@ -397,6 +398,49 @@ with psycopg.connect(
         )
         cantidad_dispensaciones = cursor.fetchone()[0]
 
+        # cargar info de citas
+        cursor.execute("select count(*) from operacional.age_citas;")
+        cantidad_actual = cursor.fetchone()[0]
+
+        if cantidad_actual == 0:
+            with open(ruta_citas, "rb") as archivo:
+                with cursor.copy(
+                    """
+                    COPY operacional.age_citas (
+                        id_cita,
+                        pac_id,
+                        med_id,
+                        sede_id,
+                        fec_agendamiento,
+                        fec_cita_programada,
+                        hra_cita_programada,
+                        hra_llegada_paciente,
+                        hra_inicio_atencion,
+                        esp_solicitada,
+                        tip_cita,
+                        estado_cita
+                    )
+                    FROM STDIN
+                    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+                    """
+                ) as copia:
+
+                    bloque = archivo.read(1024 * 1024)
+
+                    while bloque:
+                        copia.write(bloque)
+                        bloque = archivo.read(1024 * 1024)
+        else:
+            print(
+                f"age_citas: se conservan "
+                f"{cantidad_actual} registros existentes."
+            )
+
+        cursor.execute(
+            "select count(*) from operacional.age_citas;"
+        )
+        cantidad_citas = cursor.fetchone()[0]
+
 
 print("\nProceso finalizado: ")
 print(f"Paises: {cantidad_cargada}")
@@ -407,3 +451,4 @@ print(f"Pacientes: {cantidad_pacientes}")
 print(f"Mediciones de camas: {cantidad_camas}")
 print(f"Encuentros: {cantidad_encuentros}")
 print(f"Dispensaciones: {cantidad_dispensaciones}")
+print(f"Citas: {cantidad_citas}")
