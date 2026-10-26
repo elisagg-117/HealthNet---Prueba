@@ -641,7 +641,7 @@ guardar_archivos("med_planta", medicos, carpeta_salida)
 guardar_archivos("pac_registro", pacientes, carpeta_salida)
 guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
 guardar_archivos("hce_encuentros", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
-guardar_archivos("far_dispensacion_muestra", generar_dispensaciones(config["cantidad_dispensaciones"]),carpeta_salida)
+guardar_archivos("far_dispensacion", generar_dispensaciones(config["cantidad_dispensaciones"]),carpeta_salida)
 
 
 print(f"\nArchivos guardados en: {carpeta_salida}")

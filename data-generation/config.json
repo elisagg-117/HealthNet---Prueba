@@ -6,7 +6,7 @@
   "meses_alta_demanda": [6, 7],
   "porcentaje_anomalias": 0.01,
   "cantidad_encuentros": 2000000,
-  "cantidad_dispensaciones": 1000,
+  "cantidad_dispensaciones": 3000000,
   "moneda": "USD",
   "porcentaje_diag_secundario": 0.20,
   "porcentaje_procedimientos": 0.30,
