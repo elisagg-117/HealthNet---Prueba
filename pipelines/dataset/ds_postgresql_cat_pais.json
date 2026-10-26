@@ -1,0 +1,20 @@
+﻿{
+  "name": "ds_postgresql_cat_pais",
+  "properties": {
+    "additionalProperties": null,
+    "annotations": [],
+    "description": null,
+    "folder": null,
+    "linkedServiceName": {
+      "parameters": null,
+      "referenceName": "ls_postgresql_healthnet",
+      "type": "LinkedServiceReference"
+    },
+    "parameters": null,
+    "schema": [],
+    "schemaTypePropertiesSchema": "operacional",
+    "structure": null,
+    "table": "cat_pais",
+    "type": "PostgreSqlV2Table"
+  }
+}

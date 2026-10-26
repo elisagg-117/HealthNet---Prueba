@@ -1,0 +1,34 @@
+﻿{
+  "name": "ds_bronze_parquet",
+  "properties": {
+    "additionalProperties": null,
+    "annotations": [],
+    "compressionCodec": "snappy",
+    "description": null,
+    "folder": null,
+    "linkedServiceName": {
+      "parameters": null,
+      "referenceName": "ls_adls_healthnet",
+      "type": "LinkedServiceReference"
+    },
+    "location": {
+      "additionalProperties": null,
+      "fileName": "datos.parquet",
+      "fileSystem": "bronze",
+      "folderPath": {
+        "type": "Expression",
+        "value": "@dataset().p_carpeta"
+      },
+      "type": "AzureBlobFSLocation"
+    },
+    "parameters": {
+      "p_carpeta": {
+        "defaultValue": null,
+        "type": "string"
+      }
+    },
+    "schema": [],
+    "structure": null,
+    "type": "Parquet"
+  }
+}
