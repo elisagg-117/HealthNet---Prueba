@@ -23,6 +23,13 @@ param containerNames array
 param dataFactoryName string
 param selfHostedIrName string
 
+param keyVaultName string
+@allowed([
+  'standard'
+  'premium'
+])
+param keyVaultSku string
+
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: resourceGroupName
   location: location
@@ -43,6 +50,8 @@ module resources './resources.bicep' = {
     containerNames: containerNames
     dataFactoryName: dataFactoryName
     selfHostedIrName: selfHostedIrName
+    keyVaultName: keyVaultName
+    keyVaultSku: keyVaultSku
   }
 }
 
@@ -60,3 +69,8 @@ output factoryPrincipalId string = resources.outputs.factoryPrincipalId
 output runtimeId string = resources.outputs.runtimeId
 output runtimeName string = resources.outputs.runtimeName
 output storageRoleAssignmentId string = resources.outputs.storageRoleAssignmentId
+
+output vaultId string = resources.outputs.vaultId
+output vaultName string = resources.outputs.vaultName
+output vaultUri string = resources.outputs.vaultUri
+output vaultRoleAssignmentId string = resources.outputs.vaultRoleAssignmentId

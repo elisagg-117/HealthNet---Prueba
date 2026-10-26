@@ -7,6 +7,8 @@ param storageSku string
 param containerNames array
 param dataFactoryName string
 param selfHostedIrName string
+param keyVaultName string
+param keyVaultSku string
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -98,3 +100,45 @@ output factoryPrincipalId string = factory.identity.principalId
 output runtimeId string = localRuntime.id
 output runtimeName string = localRuntime.name
 output storageRoleAssignmentId string = factoryStorageRole.id
+
+
+resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: keyVaultName
+  location: location
+  tags: {
+    project: 'HealthNet'
+    environment: environment
+  }
+  properties: {
+    tenantId: subscription().tenantId
+    sku: {
+      family: 'A'
+      name: keyVaultSku
+    }
+    enableRbacAuthorization: true
+    accessPolicies: []
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 7
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+var vaultSecretsUserRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '4633458b-17de-408a-b874-0445c86b69e6'
+)
+
+resource factoryVaultRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(vault.id, factory.id, vaultSecretsUserRoleId)
+  scope: vault
+  properties: {
+    roleDefinitionId: vaultSecretsUserRoleId
+    principalId: factory.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+output vaultId string = vault.id
+output vaultName string = vault.name
+output vaultUri string = vault.properties.vaultUri
+output vaultRoleAssignmentId string = factoryVaultRole.id

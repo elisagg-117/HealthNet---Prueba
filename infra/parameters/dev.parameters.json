@@ -29,6 +29,12 @@
     },
     "selfHostedIrName": {
       "value": "ir-healthnet-local-dev"
+    },
+    "keyVaultName": {
+      "value": "kv-healthnet-dev-2026eg"
+    },
+    "keyVaultSku": {
+      "value": "standard"
     }
   }
 }
