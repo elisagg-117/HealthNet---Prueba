@@ -1,0 +1,24 @@
+﻿{
+  "name": "ls_adls_healthnet",
+  "properties": {
+    "accountKey": null,
+    "additionalProperties": null,
+    "annotations": [],
+    "azureCloudType": null,
+    "connectVia": null,
+    "credential": null,
+    "description": null,
+    "encryptedCredential": null,
+    "parameters": null,
+    "sasToken": null,
+    "sasUri": null,
+    "servicePrincipalCredential": null,
+    "servicePrincipalCredentialType": null,
+    "servicePrincipalId": null,
+    "servicePrincipalKey": null,
+    "tenant": null,
+    "type": "AzureBlobFS",
+    "url": "https://sthealthnetdev2026eg.dfs.core.windows.net/",
+    "version": null
+  }
+}
