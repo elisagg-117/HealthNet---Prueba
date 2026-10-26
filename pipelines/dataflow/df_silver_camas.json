@@ -1,0 +1,109 @@
+﻿{
+  "name": "df_silver_camas",
+  "properties": {
+    "annotations": null,
+    "description": null,
+    "folder": null,
+    "script": null,
+    "scriptLines": [
+      "source(output(",
+      "          id_registro_cama as integer,",
+      "          sede_id as integer,",
+      "          tip_unidad as string,",
+      "          fec_hora_registro as timestamp,",
+      "          num_camas_ocupadas as integer,",
+      "          num_camas_disp as integer,",
+      "          num_camas_mant as integer,",
+      "          motivo_indisponibilidad as string,",
+      "          fecha_ingesta as string,",
+      "          sistema_origen as string,",
+      "          id_lote as string",
+      "     ),",
+      "     allowSchemaDrift: true,",
+      "     validateSchema: false,",
+      "     inferDriftedColumnTypes: true,",
+      "     ignoreNoFilesFound: false,",
+      "     format: 'parquet') ~> camasBronze",
+      "camasBronze split(!isNull(fec_hora_registro)\r",
+      "&& fec_hora_registro >= toTimestamp('2025-10-01 00:00:00', 'yyyy-MM-dd HH:mm:ss')\r",
+      "&& fec_hora_registro < toTimestamp('2026-10-01 00:00:00', 'yyyy-MM-dd HH:mm:ss'),",
+      "     disjoint: false) ~> separarFechas@(conformes, rechazados)",
+      "separarFechas@rechazados derive(motivo_error = iif(isNull(fec_hora_registro),'FECHA_NULA','FECHA_FUERA_DEL_PERIODO')) ~> marcarError",
+      "separarFechas@conformes sink(allowSchemaDrift: true,",
+      "     validateSchema: false,",
+      "     format: 'parquet',",
+      "     umask: 0022,",
+      "     preCommands: [],",
+      "     postCommands: [],",
+      "     skipDuplicateMapInputs: true,",
+      "     skipDuplicateMapOutputs: true) ~> guardarConformes",
+      "marcarError sink(allowSchemaDrift: true,",
+      "     validateSchema: false,",
+      "     format: 'parquet',",
+      "     umask: 0022,",
+      "     preCommands: [],",
+      "     postCommands: [],",
+      "     skipDuplicateMapInputs: true,",
+      "     skipDuplicateMapOutputs: true) ~> guardarRechazados"
+    ],
+    "sinks": [
+      {
+        "dataset": {
+          "parameters": null,
+          "referenceName": "ds_silver_parquet",
+          "type": "DatasetReference"
+        },
+        "description": null,
+        "flowlet": null,
+        "linkedService": null,
+        "name": "guardarConformes",
+        "rejectedDataLinkedService": null,
+        "schemaLinkedService": null
+      },
+      {
+        "dataset": {
+          "parameters": null,
+          "referenceName": "ds_silver_parquet",
+          "type": "DatasetReference"
+        },
+        "description": null,
+        "flowlet": null,
+        "linkedService": null,
+        "name": "guardarRechazados",
+        "rejectedDataLinkedService": null,
+        "schemaLinkedService": null
+      }
+    ],
+    "sources": [
+      {
+        "dataset": {
+          "parameters": null,
+          "referenceName": "ds_bronze_parquet",
+          "type": "DatasetReference"
+        },
+        "description": null,
+        "flowlet": null,
+        "linkedService": null,
+        "name": "camasBronze",
+        "schemaLinkedService": null
+      }
+    ],
+    "transformations": [
+      {
+        "dataset": null,
+        "description": null,
+        "flowlet": null,
+        "linkedService": null,
+        "name": "separarFechas"
+      },
+      {
+        "dataset": null,
+        "description": null,
+        "flowlet": null,
+        "linkedService": null,
+        "name": "marcarError"
+      }
+    ],
+    "type": "MappingDataFlow"
+  }
+}
