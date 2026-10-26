@@ -23,6 +23,12 @@
         "silver",
         "gold"
       ]
+    },
+    "dataFactoryName": {
+      "value": "adf-healthnet-dev-2026eg"
+    },
+    "selfHostedIrName": {
+      "value": "ir-healthnet-local-dev"
     }
   }
 }
