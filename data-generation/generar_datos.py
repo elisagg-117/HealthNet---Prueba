@@ -582,6 +582,83 @@ def generar_dispensaciones(cantidad):
             f"se solicitaron {cantidad}."
         )
 
+# Armado de informacion de citas
+def generar_citas(cantidad):
+    citas_sin_especialidad = set(aleatorio.sample(range(1, cantidad + 1),round(cantidad * config["porcentaje_nulos"])))
+
+    ruta_encuentros = carpeta_salida / "hce_encuentros.csv"
+    contador = 0
+
+    with open(
+        ruta_encuentros,
+        newline="",
+        encoding="utf-8"
+    ) as archivo:
+        lector = csv.DictReader(archivo)
+
+        for encuentro in lector:
+            if contador >= cantidad:
+                break
+
+            contador += 1
+
+            llegada = datetime.fromisoformat(
+                encuentro["fec_registro"]
+            )
+            inicio_atencion = datetime.fromisoformat(
+                encuentro["fec_inicio_atencion"]
+            )
+
+            cita_programada = llegada - timedelta(
+                minutes=aleatorio.randint(0, 15)
+            )
+
+            agendamiento = cita_programada - timedelta(
+                days=aleatorio.randint(1, 30)
+            )
+
+            estado = aleatorio.choices(
+                ["Atendida", "Cancelada", "No asistió"],
+                weights=[80, 10, 10],
+                k=1
+            )[0]
+
+            especialidad = encuentro["esp_atendida"]
+
+            if contador in citas_sin_especialidad:
+                especialidad = None
+
+            if estado == "Atendida":
+                hora_llegada = llegada.time().isoformat()
+                hora_inicio = inicio_atencion.time().isoformat()
+            else:
+                hora_llegada = None
+                hora_inicio = None
+
+            yield {
+                "id_cita": f"CITA-{contador:08d}",
+                "pac_id": int(encuentro["pac_id"]),
+                "med_id": int(encuentro["med_id"]),
+                "sede_id": int(encuentro["sede_id"]),
+                "fec_agendamiento": agendamiento.isoformat(sep=" "),
+                "fec_cita_programada": (
+                    cita_programada.date().isoformat()
+                ),
+                "hra_cita_programada": (
+                    cita_programada.time().isoformat()
+                ),
+                "hra_llegada_paciente": hora_llegada,
+                "hra_inicio_atencion": hora_inicio,
+                "esp_solicitada": especialidad,
+                "tip_cita": encuentro["tip_consulta"],
+                "estado_cita": estado
+            }
+
+    if contador < cantidad:
+        raise ValueError(
+            f"Se generaron {contador} citas; "
+            f"se solicitaron {cantidad}."
+        )
 
 
 # Construcction de archivos con datos generados. se modificó la forma de generar los registros ahora en lugar de la lista coompleta, genera un registro-> escribe en json y csv -> continua
@@ -642,6 +719,7 @@ guardar_archivos("pac_registro", pacientes, carpeta_salida)
 guardar_archivos("gcm_camas", generar_camas(), carpeta_salida)
 guardar_archivos("hce_encuentros", generar_encuentros(config["cantidad_encuentros"]),carpeta_salida)
 guardar_archivos("far_dispensacion", generar_dispensaciones(config["cantidad_dispensaciones"]),carpeta_salida)
+guardar_archivos("age_citas_muestra",generar_citas(config["cantidad_citas"]),carpeta_salida)
 
 
 print(f"\nArchivos guardados en: {carpeta_salida}")

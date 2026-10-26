@@ -2,6 +2,8 @@
   "semilla": 42,
   "fecha_inicio": "2025-10-01",
   "fecha_fin": "2026-09-30",
+  "cantidad_citas": 1000,
+  "porcentaje_nulos": 0.05,
   "cantidad_camas": 500000,
   "meses_alta_demanda": [6, 7],
   "porcentaje_anomalias": 0.01,
